@@ -1,0 +1,22 @@
+{
+  "name": "couple-calendar",
+  "version": "0.1.0",
+  "description": "Couples-only shared calendar and todo app (web, iOS, Android)",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "functions"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter './packages/*' --parallel run dev",
+    "build": "pnpm --filter './packages/*' run build",
+    "test": "pnpm --filter './packages/*' run test",
+    "lint": "pnpm --filter './packages/*' run lint",
+    "firebase:emulate": "firebase emulators:start",
+    "firebase:deploy": "firebase deploy"
+  },
+  "devDependencies": {
+    "firebase-tools": "^13.0.0",
+    "typescript": "^5.3.0"
+  }
+}

@@ -1,0 +1,6 @@
+packages:
+  - 'packages/*'
+  - 'functions'
+allowBuilds:
+  protobufjs: false
+  re2: false

@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ========================================================================
+    // HELPER FUNCTIONS
+    // ========================================================================
+
+    // Check if user is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Get the authenticated user's ID
+    function uid() {
+      return request.auth.uid;
+    }
+
+    // Check if user is part of a couple
+    function isCouplePartner(coupleId) {
+      let couple = get(/databases/$(database)/documents/couples/$(coupleId)).data;
+      return couple.partner1Id == uid() || couple.partner2Id == uid();
+    }
+
+    // ========================================================================
+    // USERS COLLECTION
+    // ========================================================================
+    // Path: /users/{userId}
+    match /users/{userId} {
+      // Users can only read/write their own document
+      allow read: if isAuth() && uid() == userId;
+      allow write: if isAuth() && uid() == userId;
+      allow create: if isAuth();
+      allow delete: if false; // Users cannot delete their own profile
+    }
+
+    // ========================================================================
+    // COUPLES COLLECTION
+    // ========================================================================
+    // Path: /couples/{coupleId}
+    match /couples/{coupleId} {
+      // Both partners can read and write couple document
+      allow read: if isAuth() && isCouplePartner(coupleId);
+      allow write: if isAuth() && isCouplePartner(coupleId);
+      allow create: if isAuth(); // Cloud Functions handle creation during pairing
+      allow delete: if false; // Couples cannot be deleted
+    }
+
+    // ========================================================================
+    // EVENTS COLLECTION
+    // ========================================================================
+    // Path: /events/{coupleId}/items/{eventId}
+    match /events/{coupleId} {
+      match /items/{eventId} {
+        // Both partners can read and write events
+        allow read: if isAuth() && isCouplePartner(coupleId);
+        allow write: if isAuth() && isCouplePartner(coupleId);
+        allow delete: if isAuth() && isCouplePartner(coupleId);
+      }
+    }
+
+    // ========================================================================
+    // TODO LISTS COLLECTION
+    // ========================================================================
+    // Path: /todoLists/{coupleId}/items/{itemId}
+    match /todoLists/{coupleId} {
+      match /items/{itemId} {
+        // Both partners can read and write todo items
+        allow read: if isAuth() && isCouplePartner(coupleId);
+        allow write: if isAuth() && isCouplePartner(coupleId);
+        allow delete: if isAuth() && isCouplePartner(coupleId);
+      }
+    }
+
+    // ========================================================================
+    // NOTIFICATIONS COLLECTION (Cloud Functions only)
+    // ========================================================================
+    // Path: /notifications/{coupleId}/{notificationId}
+    match /notifications/{coupleId} {
+      match /{notificationId} {
+        // Users can read their own notifications
+        allow read: if isAuth() && resource.data.userId == uid();
+        // Only Cloud Functions can write notifications
+        allow write: if false;
+      }
+    }
+
+    // ========================================================================
+    // PAIRING CODES COLLECTION (Cloud Functions only)
+    // ========================================================================
+    // Path: /pairing_codes/{code}
+    match /pairing_codes/{code} {
+      // Anyone authenticated can read pairing codes (to validate and get partner info)
+      allow read: if isAuth();
+      // Only Cloud Functions can write pairing codes
+      allow write: if false;
+      allow delete: if false; // Codes managed by Cloud Functions
+    }
+
+    // ========================================================================
+    // DENY ALL BY DEFAULT
+    // ========================================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-slate-950 text-slate-50;
+}
+
+/* Dark mode is default throughout the app via color-scheme and Tailwind config */
+
+/* Remove default margins */
+h1, h2, h3, h4, h5, h6, p {
+  @apply m-0;
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  @apply outline-2 outline-offset-2 outline-sky-500;
+}
+
+/* Smooth transitions */
+button, a, [role="button"] {
+  @apply transition-colors duration-200;
+}
+
+/* Loading state */
+.loading {
+  @apply animate-pulse;
+}
+
+/* Error state */
+.error {
+  @apply text-red-500;
+}
+
+/* Success state */
+.success {
+  @apply text-emerald-500;
+}
